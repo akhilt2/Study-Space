@@ -1,0 +1,83 @@
+name: learnhouse
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: learnhouse
+      POSTGRES_PASSWORD: learnhouse
+      POSTGRES_DB: learnhouse
+    volumes:
+      - learnhouse_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learnhouse -d learnhouse"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:8.6.1-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - learnhouse_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  learnhouse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        LEARNHOUSE_PUBLIC: "true"
+    restart: unless-stopped
+    env_file:
+      - path: ./apps/api/.env
+        required: false
+    environment:
+      HOSTNAME: 0.0.0.0
+      LEARNHOUSE_SQL_CONNECTION_STRING: postgresql+asyncpg://learnhouse:learnhouse@db:5432/learnhouse
+      LEARNHOUSE_REDIS_CONNECTION_STRING: redis://redis:6379/0
+      LEARNHOUSE_REDIS_URL: redis://redis:6379/0
+      LEARNHOUSE_AUTH_JWT_SECRET_KEY: ${LEARNHOUSE_AUTH_JWT_SECRET_KEY:-local-only-study-space-jwt-secret-change-me-32-chars}
+      COLLAB_INTERNAL_KEY: ${COLLAB_INTERNAL_KEY:-local-only-study-space-collab-key}
+      LEARNHOUSE_INITIAL_ADMIN_EMAIL: ${LEARNHOUSE_INITIAL_ADMIN_EMAIL:-admin@school.dev}
+      LEARNHOUSE_INITIAL_ADMIN_PASSWORD: ${LEARNHOUSE_INITIAL_ADMIN_PASSWORD:-devpassword}
+      LEARNHOUSE_SITE_NAME: Study Space
+      LEARNHOUSE_SITE_DESCRIPTION: Study Space is an open-source platform for learning experiences.
+      LEARNHOUSE_SYSTEM_EMAIL_SENDER_NAME: Study Space
+      LEARNHOUSE_DEVELOPMENT_MODE: "true"
+      LEARNHOUSE_TENANCY: single
+      LEARNHOUSE_DOMAIN: localhost:3010
+      LEARNHOUSE_FRONTEND_DOMAIN: localhost:3010
+      LEARNHOUSE_ALLOWED_ORIGINS: http://localhost:3010
+      NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL: http://localhost:3010/
+      NEXT_PUBLIC_LEARNHOUSE_API_URL: http://localhost:3010/api/v1/
+      NEXT_PUBLIC_COLLAB_URL: ws://localhost:3010/collab
+      COLLAB_PORT: 4000
+      LEARNHOUSE_API_URL: http://127.0.0.1:9000
+      LEARNHOUSE_OSS: "true"
+    ports:
+      - "3010:80"
+    volumes:
+      - learnhouse_content:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 45s
+
+volumes:
+  learnhouse_db:
+  learnhouse_redis:
+  learnhouse_content:
