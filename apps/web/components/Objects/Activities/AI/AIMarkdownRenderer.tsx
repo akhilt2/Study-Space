@@ -2,7 +2,9 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import rehypeHighlight from 'rehype-highlight'
+import { MathJaxCode } from '@components/Objects/Activities/MathJaxCode'
 
 type AIMarkdownRendererProps = {
   content: string
@@ -22,7 +24,7 @@ function AIMarkdownRenderer({ content, isStreaming = false }: AIMarkdownRenderer
         }
       `}</style>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeHighlight]}
         components={{
           // Headings
@@ -62,6 +64,9 @@ function AIMarkdownRenderer({ content, isStreaming = false }: AIMarkdownRenderer
           ),
           // Code blocks
           code: ({ className, children, ...props }) => {
+            if (className?.includes('math-inline') || className?.includes('math-display')) {
+              return <MathJaxCode className={className} {...props}>{children}</MathJaxCode>
+            }
             const isInline = !className
             if (isInline) {
               return (

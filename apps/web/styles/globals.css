@@ -284,7 +284,7 @@
   :lang(ar),
   :lang(ar) body,
   :lang(ar) .lh-org-font-root {
-    font-family: var(--font-arabic), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+     font-family: var(--font-arabic, -apple-system), BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   }
 
   a {
@@ -503,7 +503,7 @@
   :lang(ar),
   :lang(ar) body,
   :lang(ar) .lh-org-font-root {
-    font-family: var(--font-arabic), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+     font-family: var(--font-arabic, -apple-system), BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   }
 
   /* Arabic has deep descenders (ج ح خ ع غ) and stacked diacritics that get
@@ -2564,4 +2564,3 @@
   min-height: 200px;
   display: block;
 }
-

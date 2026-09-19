@@ -2,7 +2,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
 import ReactMarkdown, { Components as MarkdownComponents } from 'react-markdown'
+import remarkMath from 'remark-math'
 import remarkGfm from 'remark-gfm'
+import { MathJaxCode } from '@components/Objects/Activities/MathJaxCode'
 import {
   HoverCard,
   HoverCardContent,
@@ -375,7 +377,10 @@ function MarkdownPreview({ url }: { url: string }) {
   if (state.kind === 'ready') {
     return (
       <div className="text-xs text-gray-700 leading-relaxed">
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm, remarkMath]}
+          components={{ ...markdownComponents, code: MathJaxCode }}
+        >
           {state.text.slice(0, 6000)}
         </ReactMarkdown>
       </div>
@@ -467,7 +472,10 @@ function PreviewBody({ activity }: { activity: any }) {
     if (!description) return <EmptyState text="Assignment — open to view details" />
     return (
       <div className="text-xs text-gray-700 leading-relaxed">
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm, remarkMath]}
+          components={{ ...markdownComponents, code: MathJaxCode }}
+        >
           {description.slice(0, 4000)}
         </ReactMarkdown>
       </div>

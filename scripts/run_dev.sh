@@ -60,6 +60,10 @@ fi
 # shellcheck disable=SC1090
 set -a
 source "$SECRETS_FILE"
+if [[ -f "$ROOT_DIR/apps/api/.env" ]]; then
+  # shellcheck disable=SC1091
+  source "$ROOT_DIR/apps/api/.env"
+fi
 set +a
 
 export LEARNHOUSE_SQL_CONNECTION_STRING="postgresql+asyncpg://learnhouse:learnhouse@localhost:5432/learnhouse"
@@ -70,6 +74,15 @@ export LEARNHOUSE_HOST=0.0.0.0
 export LEARNHOUSE_DOMAIN="localhost:3000"
 export LEARNHOUSE_FRONTEND_DOMAIN="localhost:3000"
 export LEARNHOUSE_INITIAL_ADMIN_EMAIL="${LEARNHOUSE_INITIAL_ADMIN_EMAIL:-admin@school.dev}"
+export LEARNHOUSE_AI_PROVIDER="${LEARNHOUSE_AI_PROVIDER:-openai}"
+export LEARNHOUSE_AI_MODEL_FAST="${LEARNHOUSE_AI_MODEL_FAST:-gpt-4o-mini}"
+export LEARNHOUSE_AI_MODEL_STANDARD="${LEARNHOUSE_AI_MODEL_STANDARD:-gpt-4o-mini}"
+export LEARNHOUSE_AI_MODEL_PRO="${LEARNHOUSE_AI_MODEL_PRO:-gpt-4o-mini}"
+export LEARNHOUSE_AI_EMBEDDING_PROVIDER="${LEARNHOUSE_AI_EMBEDDING_PROVIDER:-openai}"
+export LEARNHOUSE_AI_EMBEDDING_MODEL="${LEARNHOUSE_AI_EMBEDDING_MODEL:-text-embedding-3-small}"
+if [[ -n "${LEARNHOUSE_AI_API_KEY:-}" ]]; then
+  export LEARNHOUSE_IS_AI_ENABLED=true
+fi
 export NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL=http://localhost:1338
 export NEXT_PUBLIC_COLLAB_URL=ws://localhost:4000
 

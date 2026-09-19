@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
+import { MathJaxCode } from '@components/Objects/Activities/MathJaxCode'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import {
@@ -909,17 +910,12 @@ function renderCitationsInText(text: string, sources: StreamSourceData['sources'
   return parts
 }
 
-// This module is pulled into the org menu bundle, so a static import would put
-// KaTeX and its stylesheet on every page of the app. Load them the first time a
-// message actually contains math, the way the editor's math block does.
+// This module is pulled into the org menu bundle, so load the math renderer only
+// the first time a message actually contains math.
 type MathPlugins = { remark: any[]; rehype: any[] }
 
 const BASE_REMARK_PLUGINS: any[] = [remarkGfm]
 const NO_REHYPE_PLUGINS: any[] = []
-
-// KaTeX paints a parse failure bright red; inside a chat bubble a formula the
-// model got wrong reads better in the surrounding text colour.
-const KATEX_OPTIONS = { errorColor: 'inherit' }
 
 let mathPluginsPromise: Promise<MathPlugins> | null = null
 
@@ -927,11 +923,9 @@ function loadMathPlugins(): Promise<MathPlugins> {
   if (!mathPluginsPromise) {
     mathPluginsPromise = Promise.all([
       import('remark-math'),
-      import('rehype-katex'),
-      import('katex/dist/katex.min.css'),
-    ]).then(([remarkMath, rehypeKatex]) => ({
+    ]).then(([remarkMath]) => ({
       remark: [remarkGfm, remarkMath.default],
-      rehype: [[rehypeKatex.default, KATEX_OPTIONS]],
+      rehype: [],
     }))
   }
   return mathPluginsPromise
@@ -1025,6 +1019,7 @@ export function CopilotMarkdown({ content, sources = [], orgslug, isStreaming = 
     }
 
     return {
+      code: MathJaxCode,
       p: ({ children, ...props }: any) => <p {...props}>{processChildren(children)}</p>,
       li: ({ children, ...props }: any) => <li {...props}>{processChildren(children)}</li>,
       td: ({ children, ...props }: any) => <td {...props}>{processChildren(children)}</td>,
