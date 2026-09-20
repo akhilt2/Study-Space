@@ -47,22 +47,6 @@ OpenAI Codex and ChatGPT were used throughout the hackathon for:
 
 AI helped accelerate the implementation of the learning experience, diagnose integration issues, and connect the frontend chatbot to relevant course and activity context.
 
-## Demo
-
-### Live Demo
-
-Add your deployed project link here, if available.
-
-### Demo / Pitch Video
-
-Add your demo or pitch video link here.
-
-*A short demo or pitch video is strongly recommended. Show the project working and briefly explain the problem, solution, and key features.*
-
-## Screenshots
-
-Add screenshots of the learner dashboard, course activity pages, AI chatbot, and collaborative workspace here.
-
 ## How to Run Locally
 
 Requirements:
