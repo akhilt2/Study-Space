@@ -16,6 +16,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
+from src.db.courses.activities import Activity
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
@@ -53,6 +54,7 @@ class RAGChatRequest(BaseModel):
     aichat_uuid: Optional[str] = None
     mode: Literal["course_only", "general"] = "course_only"
     org_slug: Optional[str] = None
+    activity_uuid: Optional[str] = None
 
 
 class RAGIndexRequest(BaseModel):
@@ -170,7 +172,21 @@ async def api_rag_chat(
     course_id = None
     org_id = None
 
-    if chat_request.course_uuid:
+    if chat_request.activity_uuid:
+        activity = (await db_session.execute(
+            select(Activity).where(Activity.activity_uuid == chat_request.activity_uuid)
+        )).scalars().first()
+        if not activity:
+            raise HTTPException(status_code=404, detail="Activity not found")
+        activity_course = (await db_session.execute(
+            select(Course).where(Course.id == activity.course_id)
+        )).scalars().first()
+        if not activity_course:
+            raise HTTPException(status_code=404, detail="Course not found")
+        course_id = activity_course.id
+        org_id = activity_course.org_id
+
+    if course_id is None and chat_request.course_uuid:
         course = (await db_session.execute(
             select(Course).where(Course.course_uuid == chat_request.course_uuid)
         )).scalars().first()
@@ -258,6 +274,7 @@ async def api_rag_chat(
         message_history=chat_session["message_history"],
         course_id=course_id,
         mode=chat_request.mode or "course_only",
+        activity_uuid=chat_request.activity_uuid,
     )
 
     return StreamingResponse(

@@ -26,6 +26,7 @@ async def query_course_rag(
     db_session: AsyncSession,
     course_id: Optional[int] = None,
     top_k: int = TOP_K,
+    activity_uuid: Optional[str] = None,
 ) -> dict:
     """
     Retrieve relevant course content via vector similarity search.
@@ -55,7 +56,8 @@ async def query_course_rag(
             FROM course_embedding ce
             JOIN course c ON c.id = ce.course_id
             WHERE ce.org_id = :org_id AND ce.course_id = :course_id
-            ORDER BY ce.embedding <=> :query_embedding
+            ORDER BY CASE WHEN :activity_uuid IS NOT NULL AND ce.activity_uuid = :activity_uuid THEN 0 ELSE 1 END,
+                     ce.embedding <=> :query_embedding
             LIMIT :top_k
         """)
         params = {
@@ -63,6 +65,7 @@ async def query_course_rag(
             "org_id": org_id,
             "course_id": course_id,
             "top_k": top_k,
+            "activity_uuid": activity_uuid,
         }
     else:
         sql = text("""
@@ -73,13 +76,15 @@ async def query_course_rag(
             FROM course_embedding ce
             JOIN course c ON c.id = ce.course_id
             WHERE ce.org_id = :org_id
-            ORDER BY ce.embedding <=> :query_embedding
+            ORDER BY CASE WHEN :activity_uuid IS NOT NULL AND ce.activity_uuid = :activity_uuid THEN 0 ELSE 1 END,
+                     ce.embedding <=> :query_embedding
             LIMIT :top_k
         """)
         params = {
             "query_embedding": embedding_str,
             "org_id": org_id,
             "top_k": top_k,
+            "activity_uuid": activity_uuid,
         }
 
     results = (await db_session.execute(sql, params)).fetchall()
@@ -128,6 +133,7 @@ async def query_course_rag_stream(
     message_history: list,
     course_id: Optional[int] = None,
     mode: str = "course_only",
+    activity_uuid: Optional[str] = None,
 ) -> tuple[AsyncGenerator[str, None], list[dict]]:
     """
     Perform RAG retrieval and return a streaming LLM response.
@@ -141,6 +147,7 @@ async def query_course_rag_stream(
         org_id=org_id,
         db_session=db_session,
         course_id=course_id,
+        activity_uuid=activity_uuid,
     )
 
     context = rag_result["context"]

@@ -46,7 +46,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { Resizable } from 're-resizable'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import rehypeHighlight from 'rehype-highlight'
+import { MathJaxCode } from '@components/Objects/Activities/MathJaxCode'
 
 const CodeMirror = dynamic(() => import('@uiw/react-codemirror'), {
   ssr: false,
@@ -383,6 +385,9 @@ const markdownComponents = {
     <li className="text-neutral-600">{children}</li>
   ),
   code: ({ className, children, ...props }: any) => {
+    if (className?.includes('math-inline') || className?.includes('math-display')) {
+      return <MathJaxCode className={className} {...props}>{children}</MathJaxCode>
+    }
     const isInline = !className
     if (isInline) {
       return (
@@ -1225,7 +1230,11 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         <>
           {description ? (
             <div className="prose-playground">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeHighlight]}
+                components={markdownComponents}
+              >
                 {description}
               </ReactMarkdown>
             </div>

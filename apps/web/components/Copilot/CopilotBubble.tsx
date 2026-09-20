@@ -77,6 +77,9 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
   const org = useOrg() as any
   const accessToken = session?.data?.tokens?.access_token
   const pathname = usePathname()
+  const currentPage = pathname?.match(/(?:\/orgs\/[^/]+)?\/course\/([^/]+)\/activity\/([^/?]+)/)
+  const currentCourseUuid = currentPage?.[1]
+  const currentActivityUuid = currentPage?.[2]
   const { track } = useLHAnalytics('learner')
 
   const [showSessions, setShowSessions] = useState(false)
@@ -261,11 +264,28 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
     }
 
     if (aichatUuid) {
-      await sendRAGChatStream(message, aichatUuid, accessToken, callbacks, selectedCourse || undefined, chatMode, orgslug)
+      await sendRAGChatStream(
+        message,
+        aichatUuid,
+        accessToken,
+        callbacks,
+        selectedCourse || currentCourseUuid,
+        chatMode,
+        orgslug,
+        currentActivityUuid,
+      )
     } else {
-      await startRAGChatStream(message, accessToken, callbacks, selectedCourse || undefined, chatMode, orgslug)
+      await startRAGChatStream(
+        message,
+        accessToken,
+        callbacks,
+        selectedCourse || currentCourseUuid,
+        chatMode,
+        orgslug,
+        currentActivityUuid,
+      )
     }
-  }, [accessToken, aichatUuid, selectedCourse, chatMode, mutateSessions, orgslug, track])
+  }, [accessToken, aichatUuid, selectedCourse, currentCourseUuid, currentActivityUuid, chatMode, mutateSessions, orgslug, track])
 
   const isInputDisabled = isWaiting || isLoadingSession
 
